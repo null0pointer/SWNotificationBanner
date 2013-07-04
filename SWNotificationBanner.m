@@ -20,9 +20,9 @@
         
         self.layer.cornerRadius = 5;
         self.layer.masksToBounds = NO;
-        self.layer.shadowOffset = CGSizeMake(0, 10);
-        self.layer.shadowRadius = 20;
-        self.layer.shadowOpacity = 0.8;
+//        self.layer.shadowOffset = CGSizeMake(0, 10);
+//        self.layer.shadowRadius = 20;
+//        self.layer.shadowOpacity = 0.8;
         
         self.textLabel = [[UILabel alloc] init];
         self.textLabel.font = [UIFont fontWithName:@"Helvetica" size:14.0];
@@ -85,11 +85,11 @@
     
     [[SWNotificationBannerStack shared] addBanner:self];
     
-    [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:0.5 delay:0.0 options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
         self.frame = CGRectMake((keyWindow.frame.size.width - self.frame.size.width) / 2, keyWindow.frame.size.height - (self.frame.size.height + 10) + self.heightOffest, self.frame.size.width, self.frame.size.height);
         self.alpha = 1.0;
     } completion:^(BOOL finished) {
-        [self performSelector:@selector(dismiss) withObject:nil afterDelay:5];
+        [self performSelector:@selector(dismiss) withObject:nil afterDelay:2];
     }];
 }
 
@@ -98,18 +98,42 @@
     
     [[SWNotificationBannerStack shared] removeBanner:self];
     
-    [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-        self.frame = CGRectMake((keyWindow.frame.size.width - self.frame.size.width) / 2, keyWindow.frame.size.height + 10, self.frame.size.width, self.frame.size.height);
+//    [UIView animateWithDuration:0.5 delay:0.0 options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
+//        self.frame = CGRectMake((keyWindow.frame.size.width - self.frame.size.width) / 2, keyWindow.frame.size.height + 10, self.frame.size.width, self.frame.size.height);
+//        self.alpha = 0.0;
+//    } completion:^(BOOL finished) {
+//        [self removeFromSuperview];
+//    }];
+    
+    [UIView animateWithDuration:0.5 delay:0.0 options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
+        self.frame = CGRectMake((keyWindow.frame.size.width - self.frame.size.width) / 2, self.frame.origin.y + 100, self.frame.size.width, self.frame.size.height);
         self.alpha = 0.0;
     } completion:^(BOOL finished) {
         [self removeFromSuperview];
     }];
+
 }
 
 - (void)moveToHeight:(float)height {
-    [UIView animateWithDuration:0.25 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:0.5 delay:0.0 options:(UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction) animations:^{
         self.frame = CGRectMake(self.frame.origin.x, height, self.frame.size.width, self.frame.size.height);
     } completion:nil];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesBegan:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesEnded:touches withEvent:event];
+    
+    if (CGRectContainsPoint(self.bounds, [[touches anyObject] locationInView:self])) {
+        [self dismiss];
+    }
 }
 
 @end
@@ -136,23 +160,27 @@
 }
 
 - (void)addBanner:(SWNotificationBanner *)banner {
-    UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
-    
     [self.stack addObject:banner];
+    
+    [self repositionBanners];
+}
+
+- (void)removeBanner:(SWNotificationBanner *)banner {
+    [self.stack removeObject:banner];
+    
+    [self repositionBanners];
+}
+
+- (void)repositionBanners {
+    UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
     
     float cumulativeHeight = keyWindow.frame.size.height - 10;
     for (int i = self.stack.count - 1; i >= 0; i--) {
         SWNotificationBanner *existingBanner = [self.stack objectAtIndex:i];
         cumulativeHeight -= existingBanner.frame.size.height;
-        if (i < self.stack.count - 1) {
-            [existingBanner moveToHeight:cumulativeHeight + existingBanner.heightOffest];
-        }
+        [existingBanner moveToHeight:cumulativeHeight + existingBanner.heightOffest];
         cumulativeHeight -= 10;
     }
-}
-
-- (void)removeBanner:(SWNotificationBanner *)banner {
-    [self.stack removeObject:banner];
 }
 
 @end
